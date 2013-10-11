@@ -28,9 +28,9 @@ Installation Instructions
 
   The simplest way to compile this package is:
 
-  1. `cd' to the directory containing the package's source code and type
+  1. 'cd' to the directory containing the package's source code and type
      `./configure` to configure the package for your system. While running, 
-     `configure' prints some messages telling which features it is 
+     'configure' prints some messages telling which features it is 
      checking for. There are many options which you may provide to configure 
      (which you can discover by running configure with the --help option).
 
@@ -43,7 +43,7 @@ Documentation
 -------------
 
   The library is distributed with detailed documentation. The documentation
-  in HTML format is stored in sub-folder named `doc'.
+  in HTML format is stored in sub-folder named 'doc'.
 
 Example
 -------
@@ -75,7 +75,8 @@ Example
 		                char *name=dom_find_attr( project->attr, "name");
 		                if( name && ( author=dom_find_node( project, "author"))){
 		                    char author_buffer[1024];
-		                    strncpy( author_buffer, author->data, author->data_len<1023? author->data_len : 1023);
+		                    strncpy( author_buffer, author->data, 
+		                    	author->data_len<1023? author->data_len : 1023);
 		                    author_buffer[author->data_len<1023? author->data_len : 1023]=0;
 		                    printf("Project %s, author %s\n", name, author_buffer);
 		                }
@@ -96,7 +97,7 @@ Example
 	}
 
 
-  See file `example.c'. To build this file, run
+  See file 'example.c'. To build this file, run
     `gcc -lexpat -lexpat-dom -o example example.c`
   in console.
 
