@@ -1,0 +1,161 @@
+# Copyright (c) 2011 Sergey Kolotsey.
+# This file if part of expat-dom library.
+# See the file COPYING for copying permission.
+
+
+# Project name and name of the output library
+PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
+
+# Prefixes and install dirs
+VPATH=@srcdir@
+prefix=$(DESTDIR)@prefix@
+exec_prefix=@exec_prefix@
+top_srcdir=@top_srcdir@
+top_builddir=@top_builddir@
+srcdir=@srcdir@
+bindir=@bindir@
+libdir=@libdir@
+includedir=@includedir@
+datarootdir=@datarootdir@
+docdir=@docdir@
+doc_relative_path=html
+
+# System and compilers
+SHELL=@SHELL@
+CC=@CC@
+LIBTOOL=@LIBTOOL@
+install_sh=@install_sh@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_STRIP_PROGRAM=@INSTALL_STRIP_PROGRAM@
+MKDIR_P=@MKDIR_P@
+
+
+# Includes and flags
+CPPFLAGS=-I$(srcdir) -I$(top_builddir) @CPPFLAGS@ @EXPAT_CFLAGS@
+CFLAGS=@CFLAGS@
+LDFLAGS=@LDFLAGS@ @EXPAT_LIBS@
+PACKAGE_VERSION:="@PACKAGE_VERSION@"
+PACKAGE_VERSION:=$(shell echo "$(PACKAGE_VERSION)" |sed "s/\./:/g")
+PACKAGE_VERSION_FLAGS=-version-info "$(PACKAGE_VERSION)"
+COMPILE=$(CC) $(CFLAGS) $(CPPFLAGS)
+LTCOMPILE=$(LIBTOOL) --silent --mode=compile $(COMPILE)
+LINK_LIB=$(LIBTOOL) --silent --mode=link $(CC) -no-undefined $(PACKAGE_VERSION_FLAGS) -rpath $(libdir) $(LDFLAGS) -o $@
+LINK_EXE=$(LIBTOOL) --silent --mode=link $(CC) $(LDFLAGS) -l$(PACKAGE_NAME) -o $@
+
+
+# Sources and objects
+API_HEADERS=expat-dom.h
+LIB_HEADERS=expat-dom.h expat-config.h
+LIB_SOURCES=escape.c expat-dom.c
+LIB_OBJECTS=$(patsubst %.c,%.lo,$(LIB_SOURCES))
+LIB_NAME=$(PACKAGE_NAME)
+EXAMPLE_HEADERS=expat-dom.h
+EXAMPLE_SOURCES=example.c
+EXAMPLE_OBJECTS=$(patsubst %.c,%.o,$(EXAMPLE_SOURCES))
+
+
+# Targets
+LIBRARY=lib$(PACKAGE_NAME).la
+EXAMPLE=example
+
+
+
+all: $(LIBRARY) $(EXAMPLE)
+
+
+
+install: install-lib-ldconfig install-bin install-data install-doc
+
+install-lib-ldconfig: install-lib
+	@if which ldconfig >/dev/null 2>/dev/null && ldconfig -p 2>/dev/null |grep $(libdir)/lib$(PACKAGE_NAME) >/dev/null 2>/dev/null; then : ; \
+	elif which id >/dev/null 2>/dev/null && test `id -u` -eq 0 && ldconfig; then : ; \
+	else echo "======================================================================" >&2; \
+	     echo "You probably need to ask you system administrator to run \`ldconfig'" >&2; \
+	     echo "to add installed libraries to cache or to add $(libdir) " >&2; \
+	     echo "to the \`LD_LIBRARY_PATH' environment variable" >&2; \
+	     echo "======================================================================" >&2; \
+	fi
+
+install-lib: $(LIBRARY)
+	$(MKDIR_P) $(libdir)
+	$(LIBTOOL) --mode=install --silent $(INSTALL) $(LIBRARY) $(libdir)/$(LIBRARY)
+
+install-bin: $(EXAMPLE)
+
+install-data:
+	$(MKDIR_P) $(includedir)
+	$(INSTALL_DATA) $(top_srcdir)/expat-dom.h $(includedir)/expat-dom.h
+
+install-doc:
+	@if [ -d $(top_srcdir)/$(doc_relative_path) ]; then \
+		echo "Installing documentation into \`$(docdir)'" >&2; \
+		pwd=`pwd`; \
+		cd "$(top_srcdir)/$(doc_relative_path)" \
+			&& $(MKDIR_P) $(docdir)/$(doc_relative_path) \
+			&& find . -type d |sed "s/^\\.\\/\{0,1\}//" |while read dir;  do if [ "X$$dir"  != "X" ]; then $(MKDIR_P) "$(docdir)/$(doc_relative_path)/$$dir"; fi; done \
+			&& find . -type f |sed "s/^\\.\\/\{0,1\}//" |while read file; do if [ "X$$file" != "X" ]; then $(INSTALL_DATA) "$$file" "$(docdir)/$(doc_relative_path)/$$file"; fi; done \
+			&& cd "$$pwd"; \
+	fi
+
+
+
+uninstall: uninstall-doc uninstall-data uninstall-bin uninstall-lib-ldconfig
+
+uninstall-lib:
+	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(LIBRARY)
+
+uninstall-lib-ldconfig: uninstall-lib
+	@if which ldconfig >/dev/null 2>/dev/null && ldconfig -p 2>/dev/null |grep $(libdir)/lib$(PACKAGE_NAME) >/dev/null 2>/dev/null; then  \
+		if which id >/dev/null 2>/dev/null && test `id -u` -eq 0 && ldconfig; then : ; \
+		else echo "======================================================================" >&2; \
+	    	echo "You probably need to ask you system administrator to run \`ldconfig'" >&2; \
+	    	echo "to remove uninstalled libraries from cache." >&2; \
+	    	echo "======================================================================" >&2; \
+	    fi; \
+	fi
+
+uninstall-bin:
+
+uninstall-data:
+	rm -f $(includedir)/expat-dom.h
+	
+uninstall-doc:
+	@if [ -d $(top_srcdir)/$(doc_relative_path) ]; then \
+		echo "Uninstalling documentation from $(docdir)" >&2; \
+		pwd=`pwd`; \
+		cd "$(top_srcdir)/$(doc_relative_path)" \
+			&& find . -type f |sed "s/^\\.\\/\{0,1\}//" |while read file; do if [ "X$$file" != "X" ]; then rm -f "$(docdir)/$(doc_relative_path)/$$file"; fi; done \
+			&& cd "$$pwd"; \
+	fi
+
+
+
+clean:
+	$(LIBTOOL) --mode=clean rm -f $(LIB_OBJECTS) $(LIBRARY) $(EXAMPLE_OBJECTS) $(EXAMPLE)
+	rm -rf .libs
+
+distclean: clean
+	rm -f expat-config.h config.status config.cache config.log libtool Makefile
+
+extraclean: distclean
+	cd $(top_srcdir) && rm -rf autom4te.cache tools && rm -f configure configure.scan autoscan.log aclocal.m4 expat-config.h.in expat-config.h.in~
+
+
+
+$(LIBRARY): $(LIB_OBJECTS)
+	$(LINK_LIB) $^
+
+$(EXAMPLE): $(EXAMPLE_OBJECTS)
+	$(LINK_EXE) $^
+
+%.lo: %.c $(LIB_HEADERS) Makefile
+	$(LTCOMPILE) -o $@ -c $<
+
+%.o: %.c Makefile
+	$(COMPILE) -o $@ -c $<
+
+.PHONY: all install install-lib-ldconfig install-lib install-bin install-data install-doc \
+uninstall uninstall-lib-ldconfig uninstall-lib uninstall-bin uninstall-data uninstall-doc \
+clean distclean extraclean
