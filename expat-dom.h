@@ -37,7 +37,7 @@
  * @section Requirements
  * This library requires <a href='http://expat.sourceforge.net'>Expat
  * library</a> in order to compile successfully. If you use a Linux distribution
- * with packging system, try installing @c libexpat-dev package.
+ * with packaging system, try installing @c libexpat-dev package.
  *
  * @section Example
  *
@@ -70,7 +70,7 @@ int main( int argc, char *argv[]){
  *
  * See also example.c.
  *
- * @section Copiright Copyright notice
+ * @section Copyright Copyright notice
  *
  * Expat-dom is free software.  You may copy, distribute, and modify it under the
  * terms of the License contained in the file COPYING distributed with this
@@ -110,7 +110,7 @@ struct dom_attr_s{
 /**
  * @brief This structure contains information about an XML node.
  *
- * The expat-dom parcer creates a DOM tree in memory. Each node of the DOM
+ * The expat-dom parser creates a DOM tree in memory. Each node of the DOM
  * tree is represented as dom_t structure. Root node of this tree contains
  * reference to its first child branch (node). This node in its turn contains
  * pointer to next node on the same level (sibling) and so on.
@@ -220,7 +220,7 @@ dom_attr_t *dom_attr_free(dom_attr_t *attr);
  * See dom_print() for examples.
  *
  */
-dom_t *dom_free(dom_t *dom);
+dom_t *dom_free(void *dom);
 
 /**
  * @brief Read DOM tree from previously opened XML file.
@@ -229,7 +229,7 @@ dom_t *dom_free(dom_t *dom);
  * The file must be opened with @c O_RDONLY or @c O_RDWR permission.
  * The function reads all the data from the file determined by file descriptor
  * and tries to parse it as XML data. If this operation succeeds, the function
- * returns a pointer to the newly created @c dom_t stricture. Otherwise NULL is
+ * returns a pointer to the newly created @c dom_t structure. Otherwise NULL is
  * returned and errno is set.
  *
  * @par Example:
@@ -237,7 +237,7 @@ dom_t *dom_free(dom_t *dom);
  *
  * @param fd Previously opened file descriptor of the file to be read
  * @return Pointer to newly allocated dom_t structure is returned if no
- * 	error occured. The user must free the allocated data when it is not used by
+ * 	error occurred. The user must free the allocated data when it is not used by
  * 	means of function dom_free(). If error occurs, the function returns NULL
  * 	and sets errno to the following values:
  * 		@li @c ENOMEM Not enough memory.
@@ -250,7 +250,7 @@ dom_t *dom_parse_file(int fd);
  * @brief Read DOM tree from a file specified by name.
  *
  * The function opens and parses XML file. If this operation succeeds,
- * the function returns a pointer to the newly created @c dom_t stricture.
+ * the function returns a pointer to the newly created @c dom_t structure.
  * Otherwise NULL is returned and errno is set.
  *
  * @par Example:
@@ -331,7 +331,7 @@ int main( int argc, char *argv[]){
  *
  * @param name Full or relative path to the XML file.
  * @return Pointer to newly allocated @c dom_t structure is returned if no
- * 	error occured. The user must free the allocated data when it is not used
+ * 	error occurred. The user must free the allocated data when it is not used
  * 	with dom_free(). If error occurs, the function returns NULL and sets
  * 	errno to the following values:
  * 		@li @c ENOMEM Not enough memory.
@@ -345,7 +345,7 @@ dom_t *dom_parse_file_name(char *name);
  * @brief Read DOM tree from a buffer.
  *
  * The function parses passed buffer as XML. If this operation succeeds, the
- * function returns a pointer to the newly created @c dom_t stricture. Otherwise
+ * function returns a pointer to the newly created @c dom_t structure. Otherwise
  * NULL is returned and errno is set.
  *
  * @par Example:
@@ -354,22 +354,22 @@ dom_t *dom_parse_file_name(char *name);
  * @param buffer Pointer to a buffer containing well-formed XML data.
  * @param buffer_len Length of the data stored in buffer.
  * @return Pointer to newly allocated @c dom_t structure is returned if no
- * 	error occured. User must free the allocated data with dom_free() when it is
+ * 	error occurred. User must free the allocated data with dom_free() when it is
  * 	not used. If error occurs, the function returns NULL and sets
  * 	errno to the following values:
  * 		@li @c ENOMEM Not enough memory.
  * 		@li @c EINVAL Parse error. The buffer does not contain valid XML data or
  * 		        the XML data is not well-formed.
  */
-dom_t *dom_parse_buffer(char *buffer, int buffer_len);
+dom_t *dom_parse_buffer(const char *buffer, int buffer_len);
 
 /**
  * @brief Parse XML data in chunks.
  *
  * The function parses part of the XML data.
  * The function should be used in cases when not all XML data is available
- * imediately. The function allows user to parse data partially. If this
- * operation succeeds, the function returns 0 and sets parser and dom variables.
+ * immediately. The function allows user to parse data partially. If this
+ * operation succeeds, the function returns 0 and sets parser and DOM variables.
  * Otherwise error is returned.
  *
  * This function is used when the length of the buffer with XML data is not
@@ -436,7 +436,7 @@ int main( int argc, char *argv[]){
  * 		@li @c EINVAL Parse error. The buffer does not contain valid XML data or
  * 		        the data is not well-formed XML data.
  */
-int dom_parse_chunked_data( void **parser, dom_t **dom, char *buffer, int buffer_len, int isFinal);
+int dom_parse_chunked_data( void **parser, dom_t **dom, const char *buffer, int buffer_len, int isFinal);
 
 /**
  * @brief Find attribute in a linked list by its name.
@@ -457,7 +457,7 @@ int dom_parse_chunked_data( void **parser, dom_t **dom, char *buffer, int buffer
  *    attribute value. If no attribute is found with the specified name,
  * 	  then NUll is returned.
  */
-char *dom_find_attr(dom_attr_t *attr, char *var);
+char *dom_find_attr(dom_attr_t *attr, const char *var);
 
 /**
  * @brief Find a node in DOM tree by its name.
@@ -480,13 +480,13 @@ char *dom_find_attr(dom_attr_t *attr, char *var);
  * @return Pointer to the first node with the specified name, if found.
  *    Otherwise NULL is returned.
  */
-dom_t *dom_find_node(dom_t *root, char *node);
+dom_t *dom_find_node(dom_t *root, const char *node);
 
 /**
- * @brief Convert specal XML characters into XML entities.
+ * @brief Convert special XML characters into XML entities.
  *
- * The function retuns a string with special XML characters converted into XML
- * entites. The following characters are converted:
+ * The function returns a string with special XML characters converted into XML
+ * entities. The following characters are converted:
  *    @li @c & (ampersand) becomes @c &amp;amp;
  *    @li @c " (double quote) becomes @c &amp;quot;
  *    @li @c ' (single quote) becomes @c &amp;apos;
@@ -494,26 +494,26 @@ dom_t *dom_find_node(dom_t *root, char *node);
  *    @li @c > (greater than) becomes @c &amp;gt;
  *
  * @par Important:
- * <i>The function is not thread-safe</i>. It retuns a pointer to a static
+ * <i>The function is not thread-safe</i>. It returns a pointer to a static
  * buffer that is reused every time the function is called.
  * If you need a thread-safe version of this function, use escape_xml_r().
  *
  * @param input Pointer to a NULL-terminated buffer that contains string to
  *    convert.
  * @return Pointer to a NULL-terminated buffer containing converted string. The
- *    buffer returned is a static buffer. In a multithreaded application use
+ *    buffer returned is a static buffer. In a multi-threaded application use
  *    escape_xml_r().
  *
  * @see escape_xml_r().
  *
  */
-char *escape_xml(char *input);
+char *escape_xml( const char *input);
 
 /**
- * @brief Convert specal XML characters into XML entities.
+ * @brief Convert special XML characters into XML entities.
  *
- * The function retuns a string with special XML characters converted into XML
- * entites. The following characters are converted:
+ * The function returns a string with special XML characters converted into XML
+ * entities. The following characters are converted:
  *    @li @c & (ampersand) becomes @c &amp;amp;
  *    @li @c " (double quote) becomes @c &amp;quot;
  *    @li @c ' (single quote) becomes @c &amp;apos;
@@ -533,31 +533,34 @@ char *escape_xml(char *input);
  *    Use function escaped_length() to determine minimum required length of
  *    this buffer.
  * @param output_max_len Length of the buffer @c output.
- * @return Length of the resulting string wrtten to @c output buffer.
+ * @return Length of the resulting string.
+ *    If the @c output buffer is not long enough, the buffer is filled and the
+ *    length of the total string is returned. If @c output_max_len is 0 then
+ *    output could be NULL
  *
  * @see escape_xml(), escaped_length().
  *
  */
-int escape_xml_r(char *input, int input_len, char *output, int output_max_len);
+int escape_xml_r( const char *input, int input_len, char *output, int output_max_len);
 
 /**
- * @brief Determine length of a string with converted specal XML chars.
+ * @brief Determine length of a string with converted special XML chars.
  *
  * The function allows to determine the length of the string with converted
  * special XML characters.
  *
- * @param input Pointer to a buffer containing a string wth special XML chars.
+ * @param input Pointer to a buffer containing a string with special XML chars.
  * @param input_length Length of the string in buffer @c input.
- * @return Length of the bufer to store converted string.
+ * @return Length of the buffer to store converted string.
  *
  * @see escape_xml_r().
  */
-int escaped_length( char *input, int input_length);
+#define escaped_length( input, input_len) (escape_xml_r( (input), (input_len), NULL, 0))
 
 /**
- * @brief Convert XML entities into specal XML characters.
+ * @brief Convert XML entities into special XML characters.
  *
- * The function retuns a string with XML entites converted to special XML
+ * The function returns a string with XML entities converted to special XML
  * characters. The following entities are converted:
  *    @li @c &amp;amp; becomes @c &
  *    @li @c &amp;quot; becomes @c "
@@ -566,25 +569,25 @@ int escaped_length( char *input, int input_length);
  *    @li @c &amp;gt; becomes @c >
  *
  * @par Important:
- * <i>The function is not thread-safe</i>. It retuns a pointer to a static
+ * <i>The function is not thread-safe</i>. It returns a pointer to a static
  * buffer that is reused every time the function is called.
  * If you need a thread-safe version of this function, use unescape_xml_r().
  *
  * @param input Pointer to a NULL-terminated buffer that contains string to
  *    convert.
  * @return Pointer to a NULL-terminated buffer containing converted string. The
- *    buffer returned is a static buffer. In a multithreaded application use
+ *    buffer returned is a static buffer. In a multi-threaded application use
  *    unescape_xml_r().
  *
  * @see unescape_xml_r().
  *
  */
-char *unescape_xml(char *input);
+char *unescape_xml( const char *input);
 
 /**
- * @brief Convert XML entities into specal XML characters.
+ * @brief Convert XML entities into special XML characters.
  *
- * The function retuns a string with XML entites converted to special XML
+ * The function returns a string with XML entities converted to special XML
  * characters. The following entities are converted:
  *    @li @c &amp;amp; becomes @c &
  *    @li @c &amp;quot; becomes @c "
@@ -605,8 +608,36 @@ char *unescape_xml(char *input);
  * @see unescape_xml().
  *
  */
-int unescape_xml_r(char *input, int input_len, char *output);
+int unescape_xml_r( const char *input, int input_len, char *output);
 
+/**
+ * @brief Test if a character is a special character and needs to be escaped.
+ *
+ * The function returns 1 if a provided character is one of the following:
+ * characters.
+ *    @li @c &amp;amp; becomes @c &
+ *    @li @c &amp;quot; becomes @c "
+ *    @li @c &amp;apos; becomes @c '
+ *    @li @c &amp;lt; becomes @c <
+ *    @li @c &amp;gt; becomes @c >
+ *
+ * @param c Character to test.
+ * @return 1 if the character is escaped in XML, otherwise returns 0.
+ */
+#define is_escaped( c) ({\
+	int ret_=0;\
+	switch((int)(c)){\
+		case '<':\
+		case '>':\
+		case '\'':\
+		case '"':\
+		case '&':\
+			ret_=1;\
+		default:\
+			break;\
+	}\
+	(ret_);\
+})
 
 /** @} */
 

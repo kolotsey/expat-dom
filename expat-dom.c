@@ -66,17 +66,18 @@ dom_attr_t *dom_attr_free(dom_attr_t *attr){
 	return NULL;
 }
 
-dom_t *dom_free(dom_t *dom){
+dom_t *dom_free(void *dom){
 	dom_t *temp;
-	while(dom){
-		if(dom->name)
-			free(dom->name);
-		if(dom->data)
-			free(dom->data);
-		dom_attr_free(dom->attr);
-		dom_free(dom->child);
-		temp=dom;
-		dom=dom->next;
+	dom_t *d=(dom_t *)dom;
+	while(d){
+		if(d->name)
+			free(d->name);
+		if(d->data)
+			free(d->data);
+		dom_attr_free(d->attr);
+		dom_free(d->child);
+		temp=d;
+		d=d->next;
 		free(temp);
 	}
 	return NULL;
@@ -85,7 +86,8 @@ dom_t *dom_free(dom_t *dom){
 
 
 static dom_attr_t *dom_attributes(const char **atts){
-	dom_attr_t *attr=NULL;
+	dom_attr_t *attr_head=NULL;
+	dom_attr_t *attr_tail=NULL;
 	dom_attr_t *temp;
 
 	while(atts[0]){
@@ -96,14 +98,18 @@ static dom_attr_t *dom_attributes(const char **atts){
 			}else{
 				temp->val=strdup("");
 			}
-			temp->next=attr;
-			attr=temp;
+			if( attr_tail){
+				attr_tail->next=temp;
+				attr_tail=temp;
+			}else{
+				attr_head=attr_tail=temp;
+			}
 			atts+=2;
 		}else{
 			break;
 		}
 	}
-	return attr;
+	return attr_head;
 }
 
 static void XMLCALL start_element(void *user_data, const char *name, const char **atts){
@@ -271,7 +277,7 @@ static void XMLCALL element_data(void *user_data, const char *buffer, int buffer
 
 
 //функция для поиска нужного параметра в массиве атрибутов
-char *dom_find_attr(dom_attr_t *attr, char *var){
+char *dom_find_attr(dom_attr_t *attr, const char *var){
 	while(attr){
 		if(0==strcasecmp(var, attr->var)){
 			return attr->val;
@@ -282,7 +288,7 @@ char *dom_find_attr(dom_attr_t *attr, char *var){
 }
 
 //функция для поиска первого нужного узла в массиве узлов
-dom_t *dom_find_node(dom_t *root, char *node){
+dom_t *dom_find_node(dom_t *root, const char *node){
 	dom_t *ret;
 	while(root){
 		if(0==strcasecmp(root->name, node)){
@@ -315,7 +321,7 @@ void dom_print(FILE *output, dom_t *dom, int use_new_line){
 			if(use_new_line) fprintf( output, "\n");
 			if(dom->user_data && dom->user_data_len){
 				char *buf;
-				int len=escaped_length( dom->user_data, dom->user_data_len);
+				int len=escape_xml_r( dom->user_data, dom->user_data_len, NULL, 0);
 				if(( buf=malloc( len+1))){
 					escape_xml_r( dom->user_data, dom->user_data_len, buf, len);
 					fwrite( buf, len, 1, output);
@@ -410,7 +416,7 @@ dom_t *dom_parse_file_name(char *name){
 	return dom;
 }
 
-dom_t *dom_parse_buffer(char *buffer, int buffer_len){
+dom_t *dom_parse_buffer(const char *buffer, int buffer_len){
 	dom_t *dom=NULL;
 	XML_Parser parser;
 
@@ -443,7 +449,7 @@ dom_t *dom_parse_buffer(char *buffer, int buffer_len){
 }
 
 
-int dom_parse_chunked_data( void **parser, dom_t **dom, char *buffer, int buffer_len, int isFinal){
+int dom_parse_chunked_data( void **parser, dom_t **dom, const char *buffer, int buffer_len, int isFinal){
 	XML_Parser p=*parser;
 
 	if( NULL==p){

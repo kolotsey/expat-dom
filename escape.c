@@ -60,7 +60,7 @@
  * "&quot;" -> "\""
  * "&amp;"  -> "&"
  */
-int unescape_xml_r(char *input, int input_len, char *output){
+int unescape_xml_r( const char *input, int input_len, char *output){
 	int output_len=0;
 
 	while(input_len){
@@ -100,61 +100,66 @@ int unescape_xml_r(char *input, int input_len, char *output){
 	return output_len;
 }
 
+#define MIN(a,b) ((a)<(b)?(a):(b))
 /*
  * input and output must not be the same
  */
-int escape_xml_r(char *input, int input_len, char *output, int output_max_len){
+int escape_xml_r( const char *input, int input_len, char *output, int output_max_len){
 	int output_len=0;
+	int l;
 
-	while(input_len && output_max_len){
+	while(input_len){
 		if(*input=='<'){
-			if(output_max_len>=LT_LEN){
-				memcpy(output, LT, LT_LEN);
-				output+=LT_LEN;
-				output_len+=LT_LEN;
-				output_max_len-=LT_LEN;
-			}else{
-				break;
+			if(output_max_len>0){
+				l=MIN(LT_LEN, output_max_len);
+				memcpy(output, LT, l);
+				output+=l;
+				output_max_len-=l;
 			}
+
+			output_len+=LT_LEN;
+
 		}else if(*input=='>'){
-			if(output_max_len>=GT_LEN){
-				memcpy(output, GT, GT_LEN);
-				output+=GT_LEN;
-				output_len+=GT_LEN;
-				output_max_len-=GT_LEN;
-			}else{
-				break;
+			if(output_max_len>0){
+				l=MIN(GT_LEN, output_max_len);
+				memcpy(output, GT, l);
+				output+=l;
+				output_max_len-=l;
 			}
+			output_len+=GT_LEN;
+
 		}else if(*input=='\''){
-			if(output_max_len>=APOS_LEN){
-				memcpy(output, APOS, APOS_LEN);
-				output+=APOS_LEN;
-				output_len+=APOS_LEN;
-				output_max_len-=APOS_LEN;
-			}else{
-				break;
+			if(output_max_len>0){
+				l=MIN(APOS_LEN, output_max_len);
+				memcpy(output, APOS, l);
+				output+=l;
+				output_max_len-=l;
 			}
+			output_len+=APOS_LEN;
+
 		}else if(*input=='"'){
-			if(output_max_len>=QUOT_LEN){
-				memcpy(output, QUOT, QUOT_LEN);
-				output+=QUOT_LEN;
-				output_len+=QUOT_LEN;
-				output_max_len-=QUOT_LEN;
-			}else{
-				break;
+			if(output_max_len>0){
+				l=MIN(QUOT_LEN, output_max_len);
+				memcpy(output, QUOT, l);
+				output+=l;
+				output_max_len-=l;
 			}
+			output_len+=QUOT_LEN;
+
 		}else if(*input=='&'){
-			if(output_max_len>=AMP_LEN){
-				memcpy(output, AMP, AMP_LEN);
-				output+=AMP_LEN;
-				output_len+=AMP_LEN;
-				output_max_len-=AMP_LEN;
-			}else{
-				break;
+			if(output_max_len>0){
+				l=MIN(AMP_LEN, output_max_len);
+				memcpy(output, AMP, l);
+				output+=l;
+				output_max_len-=l;
 			}
+			output_len+=AMP_LEN;
+
 		}else{
-			*output++=*input;
-			output_max_len--;
+			if(output_max_len>=1){
+				*output++=*input;
+				output_max_len--;
+			}
 			output_len++;
 		}
 		input_len--;
@@ -167,7 +172,8 @@ int escape_xml_r(char *input, int input_len, char *output, int output_max_len){
 #define ESCAPE_TEMP_LEN 1024
 static int temp_len=0;
 static char *temp=NULL;
-char *unescape_xml(char *input){
+static char *empty="";
+char *unescape_xml( const char *input){
 	int len=strlen(input);
 	while(len+1>temp_len){
 		if((temp=realloc(temp, temp_len+ESCAPE_TEMP_LEN))){
@@ -186,49 +192,26 @@ char *unescape_xml(char *input){
 	}
 }
 
-int escaped_length( char *input, int input_length){
-	int out_len=0;
-	while( input_length){
-		if(*input=='<'){
-			out_len+=LT_LEN;
-		}else if(*input=='>'){
-			out_len+=GT_LEN;
-		}else if(*input=='\''){
-			out_len+=APOS_LEN;
-		}else if(*input=='"'){
-			out_len+=QUOT_LEN;
-		}else if(*input=='&'){
-			out_len+=AMP_LEN;
-		}else{
-			out_len++;
-		}
-		input++;
-		input_length--;
-	}
-	return out_len;
-}
-
-char *escape_xml(char *input){
+char *escape_xml( const char *input){
 	int in_len;
 	int out_len;
 
 	in_len=strlen(input);
-	out_len=escaped_length( input, in_len);
 
-	if(out_len+1>temp_len){
-		if((temp=realloc(temp, out_len+1+ESCAPE_TEMP_LEN))){
-			temp_len=out_len+1+ESCAPE_TEMP_LEN;
-		}else{
-			temp_len=0;
-		}
+	out_len=escape_xml_r( input, in_len, temp, temp_len);
+	if( out_len+1<=temp_len){
+		temp[out_len]=0;
+		return temp;
 	}
-	if(temp){
-		out_len=escape_xml_r(input, in_len, temp, out_len);
+
+	int new_len=(out_len+1)/1024*1024+ESCAPE_TEMP_LEN;
+	if((temp=realloc(temp, new_len))){
+		temp_len=new_len;
+		out_len=escape_xml_r( input, in_len, temp, temp_len);
 		temp[out_len]=0;
 		return temp;
 	}else{
-		return NULL;
+		temp_len=0;
+		return empty;
 	}
 }
-
-

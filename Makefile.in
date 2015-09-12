@@ -57,6 +57,7 @@ EXAMPLE_OBJECTS=$(patsubst %.c,%.o,$(EXAMPLE_SOURCES))
 
 
 # Targets
+LIB_BASENAME=$(PACKAGE_NAME)
 LIBRARY=lib$(PACKAGE_NAME).la
 EXAMPLE=example
 
@@ -133,7 +134,7 @@ uninstall-doc:
 
 
 clean:
-	$(LIBTOOL) --mode=clean rm -f $(LIB_OBJECTS) $(LIBRARY) $(EXAMPLE_OBJECTS) $(EXAMPLE)
+	$(LIBTOOL) --mode=clean rm -f $(LIB_OBJECTS) $(LIBRARY) $(EXAMPLE_OBJECTS) $(EXAMPLE) test
 	rm -rf .libs
 
 distclean: clean
@@ -155,6 +156,12 @@ $(EXAMPLE): $(EXAMPLE_OBJECTS)
 
 %.o: %.c Makefile
 	$(COMPILE) -o $@ -c $<
+
+
+test: test.cpp $(LIBRARY)
+	g++ -g -O0 -o $@ $< -pthread -lCppUTest -L.libs -l$(LIB_BASENAME)
+
+
 
 .PHONY: all install install-lib-ldconfig install-lib install-bin install-data install-doc \
 uninstall uninstall-lib-ldconfig uninstall-lib uninstall-bin uninstall-data uninstall-doc \
